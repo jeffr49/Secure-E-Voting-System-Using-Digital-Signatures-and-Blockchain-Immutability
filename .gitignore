@@ -43,6 +43,17 @@ coverage/
 .idea/
 
 # =====================
+# Python (face-verification-service)
+# =====================
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+
+# =====================
 # Misc
 # =====================
 *.tsbuildinfo
+
+docs/

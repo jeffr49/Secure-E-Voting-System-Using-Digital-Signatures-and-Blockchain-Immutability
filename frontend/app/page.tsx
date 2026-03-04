@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { ethers, Eip1193Provider } from "ethers";
-import { verifyFace } from "@/src/face-verification/mock";
+import { verifyFace } from "@/src/face-verification/client";
 
 declare global {
   interface Window {
@@ -87,6 +87,10 @@ export default function Home() {
     if (!res.ok) return alert("Voter not found");
 
     const data = await res.json();
+    if (data.has_voted) {
+      alert("This voter has already voted.");
+      return;
+    }
     setVoterData(data);
     setScreen("confirm");
   }
@@ -166,7 +170,7 @@ export default function Home() {
       const submit = await fetch("http://localhost:4000/submit-vote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ vote, voucher, voterSignature, adminSignature })
+        body: JSON.stringify({ vote, voucher, voterSignature, adminSignature, voterId })
       });
 
       const r = await submit.json();

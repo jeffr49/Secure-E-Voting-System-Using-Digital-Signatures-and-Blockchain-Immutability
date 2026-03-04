@@ -63,7 +63,7 @@ app.post("/get-voter", async (req, res) => {
 
   const { data, error } = await supabase
     .from("voters")
-    .select("*")
+    .select("voter_id, name, age, booth_no, has_voted")
     .eq("voter_id", voterId)
     .single();
 
@@ -95,10 +95,14 @@ app.post("/generate-voucher", async (req, res) => {
 /* ----- SUBMIT VOTE ----- */
 app.post("/submit-vote", async (req, res) => {
   try {
-    const { vote, voucher, voterSignature, adminSignature } = req.body;
+    const { vote, voucher, voterSignature, adminSignature, voterId } = req.body;
 
     const tx = await contract.vote(vote, voucher, voterSignature, adminSignature);
     await tx.wait();
+
+    if (voterId) {
+      await supabase.from("voters").update({ has_voted: true }).eq("voter_id", voterId);
+    }
 
     res.json({ success: true, txHash: tx.hash });
   } catch (e) {
