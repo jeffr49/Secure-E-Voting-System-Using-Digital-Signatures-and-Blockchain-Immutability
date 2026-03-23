@@ -40,6 +40,16 @@ def create_session(voter_id: str = None):
         "qr_code_url": f"http://192.168.1.104:3000/mobile?session_id={session_id}"
     }
 
+@app.get("/create-register-session")
+def create_register_session(voter_id: str = None):
+    session_id = str(uuid.uuid4())
+    SESSION_STORE[session_id] = {"status": "pending", "voter_id": voter_id}
+    return {
+        "session_id": session_id,
+        "voter_id": voter_id,
+        "qr_code_url": f"http://192.168.1.104:3000/mobile/register?session_id={session_id}"
+    }
+
 @app.get("/session-status/{session_id}")
 def session_status(session_id: str):
     if session_id not in SESSION_STORE:
@@ -95,6 +105,7 @@ async def verify_user(
 @app.post("/register-face")
 async def register_face(
     voter_id: str = Form(...),
+    session_id: str = Form(None),
     file: UploadFile = File(...),
 ):
     user_data = get_voter(voter_id)
@@ -110,6 +121,9 @@ async def register_face(
     ok = update_face_encoding(voter_id, encoding)
     if not ok:
         raise HTTPException(status_code=500, detail="Failed to save face encoding.")
+
+    if session_id and session_id in SESSION_STORE:
+        SESSION_STORE[session_id] = {"status": "registered", "voter_id": voter_id}
 
     return {"status": "success", "message": f"Face registered for voter {voter_id}."}
 

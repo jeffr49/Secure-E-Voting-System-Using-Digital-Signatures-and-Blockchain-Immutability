@@ -14,6 +14,52 @@ const inter = Inter({ subsets: ["latin"], weight: ["500"] });
 const instrumentSerif = Instrument_Serif({ subsets: ["latin"], weight: ["400"], style: ["italic"] });
 const manrope = Manrope({ subsets: ["latin"], weight: ["400", "500", "600"] });
 const cabin = Cabin({ subsets: ["latin"], weight: ["500"] });
+const card: React.CSSProperties = {
+  padding: 40,
+  borderRadius: 24,
+  backdropFilter: "blur(10px)",
+  backgroundColor: "rgba(255,255,255,0.05)",
+  border: "1.5px solid rgba(255,255,255,0.1)",
+  maxWidth: 520,
+  width: "90%",
+  margin: "80px auto",
+  textAlign: "center",
+  color: "white",
+  fontFamily: manrope.style.fontFamily
+};
+
+const button: React.CSSProperties = {
+  padding: "14px 24px",
+  margin: 8,
+  borderRadius: 10,
+  border: "none",
+  background: "#7b39fc",
+  color: "white",
+  cursor: "pointer",
+  fontFamily: cabin.style.fontFamily,
+  fontWeight: 500,
+  fontSize: "16px",
+  lineHeight: "1.7",
+  boxShadow: "0px 4px 16px rgba(123, 57, 252, 0.2)"
+};
+
+const secondaryBtn: React.CSSProperties = { ...button, background: "#2b2344", boxShadow: "none" };
+const inputStyle: React.CSSProperties = { padding: "12px", width: "80%", marginBottom: 10, borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(0,0,0,0.3)", color: "white", fontFamily: manrope.style.fontFamily };
+
+const PageWrapper = ({ children, onBack }: { children: React.ReactNode, onBack: () => void }) => (
+  <div style={{ position: "relative", minHeight: "100vh", backgroundColor: "#000000", overflow: "hidden", width: "100%" }}>
+    <div style={{ position: "absolute", top: "215px", left: "50%", transform: "translateX(-50%)", width: "801px", height: "384px", backgroundColor: "#000000", borderRadius: "500px", filter: "blur(77.5px)", zIndex: 1, pointerEvents: "none" }} />
+    <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
+      <nav style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%", maxWidth: "1440px", padding: "16px 120px", height: "102px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "80px", cursor: "pointer" }} onClick={onBack}>
+          <div style={{ width: "134px", color: "white", fontSize: "24px", fontWeight: "bold", letterSpacing: "1px" }}>BIO-VOTE</div>
+        </div>
+        <button onClick={onBack} style={{ backgroundColor: "rgba(255,255,255,0.1)", padding: "8px 16px", borderRadius: "8px", fontFamily: manrope.style.fontFamily, fontWeight: 600, fontSize: "14px", color: "white", border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer" }}>Back to Home</button>
+      </nav>
+      {children}
+    </div>
+  </div>
+);
 
 export default function Home() {
   const [screen, setScreen] = useState("idle");
@@ -50,52 +96,7 @@ export default function Home() {
     }
   }
 
-  const card: React.CSSProperties = {
-    padding: 40,
-    borderRadius: 24,
-    backdropFilter: "blur(10px)",
-    backgroundColor: "rgba(255,255,255,0.05)",
-    border: "1.5px solid rgba(255,255,255,0.1)",
-    maxWidth: 520,
-    width: "90%",
-    margin: "80px auto",
-    textAlign: "center",
-    color: "white",
-    fontFamily: manrope.style.fontFamily
-  };
-
-  const button: React.CSSProperties = {
-    padding: "14px 24px",
-    margin: 8,
-    borderRadius: 10,
-    border: "none",
-    background: "#7b39fc",
-    color: "white",
-    cursor: "pointer",
-    fontFamily: cabin.style.fontFamily,
-    fontWeight: 500,
-    fontSize: "16px",
-    lineHeight: "1.7",
-    boxShadow: "0px 4px 16px rgba(123, 57, 252, 0.2)"
-  };
-
-  const secondaryBtn: React.CSSProperties = { ...button, background: "#2b2344", boxShadow: "none" };
-  const inputStyle: React.CSSProperties = { padding: "12px", width: "80%", marginBottom: 10, borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(0,0,0,0.3)", color: "white", fontFamily: manrope.style.fontFamily };
-
-  const PageWrapper = ({ children }: { children: React.ReactNode }) => (
-    <div style={{ position: "relative", minHeight: "100vh", backgroundColor: "#000000", overflow: "hidden", width: "100%" }}>
-      <div style={{ position: "absolute", top: "215px", left: "50%", transform: "translateX(-50%)", width: "801px", height: "384px", backgroundColor: "#000000", borderRadius: "500px", filter: "blur(77.5px)", zIndex: 1, pointerEvents: "none" }} />
-      <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
-        <nav style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%", maxWidth: "1440px", padding: "16px 120px", height: "102px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "80px", cursor: "pointer" }} onClick={() => setScreen("idle")}>
-            <div style={{ width: "134px", color: "white", fontSize: "24px", fontWeight: "bold", letterSpacing: "1px" }}>BIO-VOTE</div>
-          </div>
-          <button onClick={() => setScreen("idle")} style={{ backgroundColor: "rgba(255,255,255,0.1)", padding: "8px 16px", borderRadius: "8px", fontFamily: manrope.style.fontFamily, fontWeight: 600, fontSize: "14px", color: "white", border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer" }}>Back to Home</button>
-        </nav>
-        {children}
-      </div>
-    </div>
-  );
+  // Styles and PageWrapper component correctly hoisted above component to prevent focus resets on keystrokes.
 
   async function handleLogin() {
     if (!voterId) return alert("Please enter Voter ID");
@@ -134,14 +135,19 @@ export default function Home() {
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (screen === "qr-auth" && qrSessionId) {
+    if ((screen === "qr-auth" || screen === "register-face") && qrSessionId) {
       interval = setInterval(async () => {
         try {
           const res = await fetch(`http://localhost:8000/session-status/${qrSessionId}`);
           const data = await res.json();
-          if (data.status === "verified") {
+          if (screen === "qr-auth" && data.status === "verified") {
             clearInterval(interval);
             setScreen("vote");
+            setStatus("");
+          } else if (screen === "register-face" && data.status === "registered") {
+            clearInterval(interval);
+            alert("Biometric identity successfully enrolled on-chain!");
+            setScreen("idle");
             setStatus("");
           }
         } catch (e) {
@@ -276,7 +282,7 @@ export default function Home() {
   );
 
   if (screen === "login") return (
-    <PageWrapper>
+    <PageWrapper onBack={() => setScreen("idle")}>
       <div style={card}>
         <h2 style={{ fontFamily: inter.style.fontFamily, fontWeight: 500, fontSize: "28px", marginBottom: "20px" }}>Enter Registration ID</h2>
         <input placeholder="Voter ID (e.g. V101)" value={voterId} onChange={(e) => setVoterId(e.target.value)} style={inputStyle} />
@@ -287,7 +293,7 @@ export default function Home() {
   );
 
   if (screen === "register") return (
-    <PageWrapper>
+    <PageWrapper onBack={() => setScreen("idle")}>
       <div style={card}>
         <h2 style={{ fontFamily: inter.style.fontFamily, fontWeight: 500, fontSize: "28px", marginBottom: "20px" }}>Register New Voter</h2>
         <input placeholder="Voter ID (e.g. V101)" value={voterId} onChange={(e) => setVoterId(e.target.value)} style={inputStyle} />
@@ -302,8 +308,19 @@ export default function Home() {
             body: JSON.stringify({ voterId, name: regName, age: regAge, booth_no: regBooth })
           });
           if (res.ok) {
-            alert("Voter saved! Now upload your reference face image.");
-            setScreen("register-face");
+            alert("Voter saved! Initiating secure biometric scan...");
+            try {
+              setStatus("Initializing registration session...");
+              setScreen("register-face");
+              const qrRes = await fetch(`http://localhost:8000/create-register-session?voter_id=${voterId}`);
+              const qrData = await qrRes.json();
+              setQrSessionId(qrData.session_id);
+              setQrDataUrl(qrData.qr_code_url);
+              setStatus("Scan the QR code below using your mobile phone to securely enroll your biometric profile.");
+            } catch (err) {
+              console.error(err);
+              setStatus("Failed to create registration session with Python backend.");
+            }
           } else {
             alert("Database Error registering voter.");
           }
@@ -313,38 +330,22 @@ export default function Home() {
   );
   
   if (screen === "register-face") return (
-    <PageWrapper>
+    <PageWrapper onBack={() => setScreen("idle")}>
       <div style={card}>
         <h2 style={{ fontFamily: inter.style.fontFamily, fontWeight: 500, fontSize: "28px", marginBottom: "10px" }}>Face Enrollment</h2>
-        <p style={{fontSize: 14, color: "#aaa", marginBottom: "20px"}}>Upload or capture your base biometric identity picture.</p>
-        <div style={{ background: "rgba(0,0,0,0.3)", padding: "20px", borderRadius: "10px", border: "1px dashed rgba(255,255,255,0.2)" }}>
-          <input type="file" accept="image/*" onChange={async (e) => {
-            if (!e.target.files || !e.target.files.length) return;
-            const file = e.target.files[0];
-            const formData = new FormData();
-            formData.append("voter_id", voterId);
-            formData.append("file", file);
-            setStatus("Uploading biometric schema...");
-            const res = await fetch("http://localhost:8000/register-face", {
-              method: "POST", body: formData
-            });
-            if (res.ok) {
-              alert("Identity secured on-chain!");
-              setScreen("idle");
-              setStatus("");
-            } else {
-              setStatus("Failed to extract face encryption.");
-            }
-          }} style={{ color: "white" }} />
-        </div>
-        <p style={{color: "#ff4d4d", marginTop: "15px"}}>{status}</p>
-        <button style={{...secondaryBtn, marginTop: "20px"}} onClick={() => setScreen("idle")}>Finish Later</button>
+        <p style={{marginBottom: 20, color: "#ccc"}}>{status}</p>
+        {qrDataUrl && (
+          <div style={{ margin: "20px auto", padding: "16px", background: "white", display: "inline-block", borderRadius: "16px" }}>
+            <QRCodeSVG value={qrDataUrl} size={256} />
+          </div>
+        )}
+        <button style={{...secondaryBtn, marginTop: "20px"}} onClick={() => setScreen("idle")}>Cancel Enrollment</button>
       </div>
     </PageWrapper>
   );
 
   if (screen === "qr-auth") return (
-    <PageWrapper>
+    <PageWrapper onBack={() => setScreen("idle")}>
       <div style={card}>
         <h2 style={{ fontFamily: inter.style.fontFamily, fontWeight: 500, fontSize: "28px", marginBottom: "10px" }}>Authenticate to Vote</h2>
         <p style={{marginBottom: 20, color: "#ccc"}}>{status}</p>
@@ -358,7 +359,7 @@ export default function Home() {
   );
 
   if (screen === "vote") return (
-    <PageWrapper>
+    <PageWrapper onBack={() => setScreen("idle")}>
       <div style={card}>
         <h2 style={{ fontFamily: inter.style.fontFamily, fontWeight: 500, fontSize: "28px", marginBottom: "10px" }}>Digital Ballot Box</h2>
         <p style={{ color: "#aaa", marginBottom: "30px" }}>Secure ID: {voterId}</p>
@@ -373,7 +374,7 @@ export default function Home() {
   );
 
   if (screen === "candidates") return (
-    <PageWrapper>
+    <PageWrapper onBack={() => setScreen("idle")}>
       <div style={{...card, maxWidth: "800px"}}>
         <h2 style={{ fontFamily: inter.style.fontFamily, fontWeight: 500, fontSize: "32px", marginBottom: "30px" }}>Live Election Candidates</h2>
         {status ? (
@@ -394,7 +395,7 @@ export default function Home() {
   );
 
   if (screen === "admin-login") return (
-    <PageWrapper>
+    <PageWrapper onBack={() => setScreen("idle")}>
       <div style={card}>
         <h2 style={{ fontFamily: inter.style.fontFamily, fontWeight: 500, fontSize: "28px", marginBottom: "20px" }}>Portal Access</h2>
         <input type="password" placeholder="Passphrase" value={adminPass} onChange={(e) => setAdminPass(e.target.value)} style={inputStyle} />
@@ -405,7 +406,7 @@ export default function Home() {
   );
 
   if (screen === "admin") return (
-    <PageWrapper>
+    <PageWrapper onBack={() => setScreen("idle")}>
       <div style={card}>
         <h2 style={{ fontFamily: inter.style.fontFamily, fontWeight: 500, fontSize: "28px", marginBottom: "20px" }}>Immutable Ledger</h2>
         <button style={{...button, marginBottom: "20px"}} onClick={getCounts}>Sync Blockchain Votes</button>
