@@ -11,6 +11,9 @@ from io import BytesIO
 from PIL import Image
 import numpy as np
 import cv2
+import uuid
+
+SESSION_STORE = {}
 
 app = FastAPI(title="SecureVoting Face Verification", version="1.0.0")
 
@@ -27,11 +30,28 @@ app.add_middleware(
 def health():
     return {"service": "face-verification", "status": "ok"}
 
+@app.get("/create-session")
+def create_session(voter_id: str = None):
+    session_id = str(uuid.uuid4())
+    SESSION_STORE[session_id] = {"status": "pending", "voter_id": voter_id}
+    return {
+        "session_id": session_id,
+        "voter_id": voter_id,
+        "qr_code_url": f"http://192.168.1.104:3000/mobile?session_id={session_id}"
+    }
 
-@app.post("/verify")
+@app.get("/session-status/{session_id}")
+def session_status(session_id: str):
+    if session_id not in SESSION_STORE:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return SESSION_STORE[session_id]
+
+
+@app.post("/verify/{challenge_type}")
 async def verify_user(
+    challenge_type: str,
     voter_id: str = Form(...),
-    challenge_type: str = Form("smile"),
+    session_id: str = Form(None),
     file: UploadFile = File(...),
 ):
     """
@@ -63,6 +83,8 @@ async def verify_user(
     )
 
     if is_match:
+        if session_id and session_id in SESSION_STORE:
+            SESSION_STORE[session_id] = {"status": "verified", "voter_id": voter_id}
         return {
             "verified": True,
             "message": message,

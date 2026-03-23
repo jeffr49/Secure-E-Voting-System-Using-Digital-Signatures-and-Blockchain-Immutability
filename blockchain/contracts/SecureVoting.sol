@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 contract SecureVoting is EIP712, ReentrancyGuard {
 
     address public admin;
+    string[] public candidates;
 
     // ---------- UPDATED ----------
     mapping(bytes32 => bool) public hasVotedSession;
@@ -43,10 +44,17 @@ contract SecureVoting is EIP712, ReentrancyGuard {
 
     event NewVote(address indexed voter, uint256 indexed candidateId, bytes32 sessionId);
 
-    constructor(address _admin)
+    constructor(address _admin, string[] memory _candidateNames)
         EIP712("SecureVoting", "1")
     {
         admin = _admin;
+        for (uint256 i = 0; i < _candidateNames.length; i++) {
+            candidates.push(_candidateNames[i]);
+        }
+    }
+
+    function getAllCandidates() external view returns (string[] memory) {
+        return candidates;
     }
 
     function vote(
@@ -100,6 +108,8 @@ contract SecureVoting is EIP712, ReentrancyGuard {
 
         // ---------- UPDATED UNIQUE CHECK ----------
         require(!hasVotedSession[voteData.sessionId], "Already voted");
+
+        require(voteData.candidateId < candidates.length, "Invalid candidate ID");
 
         // ---------- Record Vote ----------
         hasVotedSession[voteData.sessionId] = true;

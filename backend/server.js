@@ -72,10 +72,38 @@ app.post("/get-voter", async (req, res) => {
   res.json(data);
 });
 
+/* ----- VOTER REGISTER ----- */
+app.post("/register-voter", async (req, res) => {
+  const { voterId, name, age, booth_no } = req.body;
+  if (!voterId || !name) return res.status(400).json({ error: "Missing required fields" });
+
+  const { data, error } = await supabase
+    .from("voters")
+    .insert([{ voter_id: voterId, name, age, booth_no, has_voted: false }]);
+
+  if (error) return res.status(400).json({ error: error.message });
+  res.json({ success: true });
+});
+
+/* ----- GET VOTER ----- */
+app.post("/get-voter", async (req, res) => {
+  const { voterId } = req.body;
+  if (!voterId) return res.status(400).json({ error: "Missing voterId" });
+
+  const { data, error } = await supabase
+    .from("voters")
+    .select("*")
+    .eq("voter_id", voterId)
+    .single();
+
+  if (error || !data) return res.status(404).json({ error: "Voter not found" });
+  res.json(data);
+});
+
 /* ----- VOUCHER ----- */
 app.post("/generate-voucher", async (req, res) => {
   try {
-    const { voterAddress, sessionId, nonce } = req.body;
+    const { voterAddress, voterId, sessionId, nonce } = req.body;
 
     if (!voterAddress || !sessionId || nonce === undefined)
       return res.status(400).json({ error: "Missing fields" });
@@ -123,4 +151,5 @@ app.get("/vote-counts", async (req, res) => {
   res.json(counts.map(Number));
 });
 
-app.listen(4000, () => console.log("Server running 4000"));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

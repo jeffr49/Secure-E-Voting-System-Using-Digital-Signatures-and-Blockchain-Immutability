@@ -9,7 +9,8 @@ async function main() {
 
   const Voting = await ethers.getContractFactory("SecureVoting");
 
-  const contract = await Voting.deploy(deployer.address);
+  const candidates = ["Alice", "Bob", "Charlie"];
+  const contract = await Voting.deploy(deployer.address, candidates);
 
   await contract.waitForDeployment();
 
