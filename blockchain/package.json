@@ -5,8 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "node": "npx hardhat node --state hardhat-state.json",
-    "deploy": "npx hardhat run scripts/deploy.ts --network localhost"
+    "node": "npx hardhat node",
+    "deploy": "npx hardhat run scripts/deploy.ts --network localhost",
+    "save-state": "node scripts/save-state.mjs",
+    "load-state": "node scripts/load-state.mjs"
   },
   "keywords": [],
   "author": "",
