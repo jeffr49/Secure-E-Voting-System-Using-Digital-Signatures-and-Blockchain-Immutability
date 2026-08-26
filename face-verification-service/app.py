@@ -10,7 +10,6 @@ import os
 load_dotenv()
 LOCAL_IP = os.getenv("LOCAL_IP", "localhost")
 
-from services.face_logic import encode_face, verify_face_match_with_challenge
 from database import get_voter, update_face_encoding
 from io import BytesIO
 from PIL import Image
@@ -19,6 +18,25 @@ import cv2
 import uuid
 
 SESSION_STORE = {}
+FACE_LOGIC_IMPORT_ERROR = None
+
+try:
+    from services.face_logic import encode_face, verify_face_match_with_challenge
+except ModuleNotFoundError as exc:
+    encode_face = None
+    verify_face_match_with_challenge = None
+    FACE_LOGIC_IMPORT_ERROR = exc
+
+
+def require_face_logic():
+    if FACE_LOGIC_IMPORT_ERROR is not None:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Face recognition dependencies are not installed. "
+                "Run: pip install -r requirements.txt"
+            ),
+        )
 
 app = FastAPI(title="SecureVoting Face Verification", version="1.0.0")
 
@@ -73,6 +91,8 @@ async def verify_user(
     Verify a voter's face against stored encoding (1:1 match + liveness challenge).
     Used by the main frontend after voter lookup.
     """
+    require_face_logic()
+
     user_data = get_voter(voter_id)
     if not user_data:
         raise HTTPException(status_code=404, detail="Invalid Voter ID")
@@ -109,6 +129,8 @@ async def register_face(
     session_id: str = Form(None),
     file: UploadFile = File(...),
 ):
+    require_face_logic()
+
     user_data = get_voter(voter_id)
     if not user_data:
         raise HTTPException(status_code=404, detail="Voter not found. Add voter first.")

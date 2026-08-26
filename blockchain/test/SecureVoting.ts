@@ -9,7 +9,7 @@ describe("SecureVoting Contract", function () {
     const [admin, voter] = await ethers.getSigners();
 
     const Voting = await ethers.getContractFactory("SecureVoting");
-    const contract = await Voting.deploy(admin.address);
+    const contract = await Voting.deploy(admin.address, ["Alice", "Bob", "Charlie"]);
     await contract.waitForDeployment();
 
     const domain = {
