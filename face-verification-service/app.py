@@ -6,9 +6,21 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
+import socket
 
 load_dotenv()
-LOCAL_IP = os.getenv("LOCAL_IP", "localhost")
+
+
+def resolve_lan_host() -> str:
+    configured = (os.getenv("LOCAL_IP") or "").strip()
+    if configured and configured not in {"localhost", "127.0.0.1", "::1"}:
+        return configured
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+            sock.connect(("8.8.8.8", 80))
+            return sock.getsockname()[0]
+    except OSError:
+        return configured or "localhost"
 
 from database import get_voter, update_face_encoding
 from io import BytesIO
@@ -60,7 +72,7 @@ def create_session(voter_id: str = None):
     return {
         "session_id": session_id,
         "voter_id": voter_id,
-        "qr_code_url": f"http://{LOCAL_IP}:3000/mobile?session_id={session_id}"
+        "qr_code_url": f"http://{resolve_lan_host()}:3000/mobile?session_id={session_id}"
     }
 
 @app.get("/create-register-session")
@@ -70,7 +82,7 @@ def create_register_session(voter_id: str = None):
     return {
         "session_id": session_id,
         "voter_id": voter_id,
-        "qr_code_url": f"http://{LOCAL_IP}:3000/mobile/register?session_id={session_id}"
+        "qr_code_url": f"http://{resolve_lan_host()}:3000/mobile/register?session_id={session_id}"
     }
 
 @app.get("/session-status/{session_id}")

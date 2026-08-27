@@ -21,6 +21,50 @@ Assert-Command "node.exe" "Install Node.js."
 Assert-Command "npm.cmd" "Install Node.js/npm."
 Assert-Command "python.exe" "Install Python 3.10+."
 
+function Get-LanIp {
+    $cfg = Get-NetIPConfiguration -ErrorAction SilentlyContinue |
+        Where-Object { $null -ne $_.IPv4DefaultGateway -and $_.NetAdapter.Status -eq "Up" } |
+        Select-Object -First 1
+    if ($cfg -and $cfg.IPv4Address) {
+        return @($cfg.IPv4Address.IPAddress)[0]
+    }
+    return $null
+}
+
+function Set-EnvValue([string]$path, [string]$key, [string]$value) {
+    $dir = Split-Path -Parent $path
+    if (-not (Test-Path $dir)) {
+        New-Item -ItemType Directory -Path $dir | Out-Null
+    }
+    $lines = @()
+    if (Test-Path $path) {
+        $lines = @(Get-Content -Path $path)
+    }
+    $found = $false
+    $updated = foreach ($line in $lines) {
+        if ($line -match "^$([regex]::Escape($key))=") {
+            $found = $true
+            "$key=$value"
+        } else {
+            $line
+        }
+    }
+    if (-not $found) {
+        $updated = @($updated) + "$key=$value"
+    }
+    $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+    [System.IO.File]::WriteAllLines($path, [string[]]@($updated), $utf8NoBom)
+}
+
+$lanIp = Get-LanIp
+if ($lanIp) {
+    Write-Host "Using LAN IP $lanIp for phone QR codes."
+    Set-EnvValue (Join-Path $faceService ".env") "LOCAL_IP" $lanIp
+    Set-EnvValue (Join-Path $frontend ".env.local") "NEXT_PUBLIC_LOCAL_IP" $lanIp
+} else {
+    Write-Host "Could not detect a LAN IP. Phone QR codes may still use 127.0.0.1 until you set LOCAL_IP."
+}
+
 if ($Install) {
     Write-Host "Installing blockchain dependencies..."
     Push-Location $blockchain
@@ -43,15 +87,22 @@ if ($Install) {
     Pop-Location
 }
 
-$tabs = @(
-    "new-tab --title `"Blockchain Node`" powershell -NoExit -Command `"Set-Location '$blockchain'; npm run node`"",
-    "new-tab --title `"Blockchain State/Deploy`" powershell -NoExit -Command `"Start-Sleep -Seconds 8; Set-Location '$blockchain'; if (Test-Path '.\hardhat-state.json') { npm run load-state } else { npm run deploy }; Write-Host ''; Write-Host 'Blockchain is ready. Keep this tab open for logs or close it.'`"",
-    "new-tab --title `"Face API`" powershell -NoExit -Command `"Set-Location '$faceService'; python -m uvicorn app:app --host 0.0.0.0 --port 8000 --reload`"",
-    "new-tab --title `"Backend API`" powershell -NoExit -Command `"Set-Location '$backend'; node server.js`"",
-    "new-tab --title `"Frontend`" powershell -NoExit -Command `"Set-Location '$frontend'; npm run dev`""
+# Start-Process cannot launch the WindowsApps execution alias for wt.exe
+# ("The system cannot find the file specified"). Call wt.exe directly and
+# pass each flag as its own argument so titles/commands are not treated as a file.
+$wtArgs = @(
+    "new-tab", "--title", "Blockchain Node", "-d", $blockchain, "--", "powershell.exe", "-NoExit", "-Command", "npm run node",
+    ";",
+    "new-tab", "--title", "Blockchain State/Deploy", "-d", $blockchain, "--", "powershell.exe", "-NoExit", "-Command", "Start-Sleep -Seconds 8; if (Test-Path '.\hardhat-state.json') { npm run load-state; if ($LASTEXITCODE -ne 0) { npm run deploy } } else { npm run deploy }; Write-Host ''; Write-Host 'Blockchain is ready. Keep this tab open for logs or close it.'",
+    ";",
+    "new-tab", "--title", "Face API", "-d", $faceService, "--", "powershell.exe", "-NoExit", "-Command", "python -m uvicorn app:app --host 0.0.0.0 --port 8000 --reload",
+    ";",
+    "new-tab", "--title", "Backend API", "-d", $backend, "--", "powershell.exe", "-NoExit", "-Command", "node server.js",
+    ";",
+    "new-tab", "--title", "Frontend", "-d", $frontend, "--", "powershell.exe", "-NoExit", "-Command", "npm run dev"
 )
 
-Start-Process wt.exe -ArgumentList ($tabs -join " ; ")
+& wt.exe @wtArgs
 
 Write-Host "Started SecureVoting in Windows Terminal tabs."
 Write-Host "Open http://localhost:3000 after the frontend finishes compiling."
