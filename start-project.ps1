@@ -93,7 +93,7 @@ if ($Install) {
 $wtArgs = @(
     "new-tab", "--title", "Blockchain Node", "-d", $blockchain, "--", "powershell.exe", "-NoExit", "-Command", "npm run node",
     ";",
-    "new-tab", "--title", "Blockchain State/Deploy", "-d", $blockchain, "--", "powershell.exe", "-NoExit", "-Command", "Start-Sleep -Seconds 8; if (Test-Path '.\hardhat-state.json') { npm run load-state; if ($LASTEXITCODE -ne 0) { npm run deploy } } else { npm run deploy }; Write-Host ''; Write-Host 'Blockchain is ready. Keep this tab open for logs or close it.'",
+    "new-tab", "--title", "Blockchain State/Deploy", "-d", $blockchain, "--", "powershell.exe", "-NoExit", "-File", (Join-Path $blockchain "restore-or-deploy.ps1"),
     ";",
     "new-tab", "--title", "Face API", "-d", $faceService, "--", "powershell.exe", "-NoExit", "-Command", "python -m uvicorn app:app --host 0.0.0.0 --port 8000 --reload",
     ";",
