@@ -94,6 +94,39 @@ export default function Home() {
 
   // Styles and PageWrapper component correctly hoisted above component to prevent focus resets on keystrokes.
 
+  async function handleRegister() {
+    if (!voterId || !regName) return alert("Required fields missing");
+    const age = Number(regAge);
+    const boothNo = Number(regBooth);
+    if (regAge === "" || regBooth === "" || !Number.isInteger(age) || !Number.isInteger(boothNo) || age <= 0 || boothNo < 0) {
+      return alert("Age and booth number must be whole numbers.");
+    }
+
+    try {
+      const res = await fetch("http://localhost:5000/register-voter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ voterId, name: regName, age, booth_no: boothNo })
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return alert(payload.error || "Database Error registering voter.");
+      }
+
+      alert("Voter saved! Initiating secure biometric scan...");
+      setStatus("Initializing registration session...");
+      setScreen("register-face");
+      const qrRes = await fetch(`http://localhost:8000/create-register-session?voter_id=${encodeURIComponent(voterId)}`);
+      const qrData = await qrRes.json();
+      setQrSessionId(qrData.session_id);
+      setQrDataUrl(qrData.qr_code_url);
+      setStatus("Scan the QR code below using your mobile phone to securely enroll your biometric profile.");
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Failed to register voter. Is the backend running on port 5000?");
+    }
+  }
+
   async function handleLogin() {
     if (!voterId) return alert("Please enter Voter ID");
     
@@ -304,30 +337,7 @@ export default function Home() {
         <input placeholder="Age" type="number" value={regAge} onChange={(e) => setRegAge(e.target.value)} style={inputStyle} />
         <input placeholder="Booth No" type="number" value={regBooth} onChange={(e) => setRegBooth(e.target.value)} style={inputStyle} />
         
-        <button style={{...button, width: "80%", marginTop: "10px"}} onClick={async () => {
-          if (!voterId || !regName) return alert("Required fields missing");
-          const res = await fetch("http://localhost:5000/register-voter", {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ voterId, name: regName, age: regAge, booth_no: regBooth })
-          });
-          if (res.ok) {
-            alert("Voter saved! Initiating secure biometric scan...");
-            try {
-              setStatus("Initializing registration session...");
-              setScreen("register-face");
-              const qrRes = await fetch(`http://localhost:8000/create-register-session?voter_id=${voterId}`);
-              const qrData = await qrRes.json();
-              setQrSessionId(qrData.session_id);
-              setQrDataUrl(qrData.qr_code_url);
-              setStatus("Scan the QR code below using your mobile phone to securely enroll your biometric profile.");
-            } catch (err) {
-              console.error(err);
-              setStatus("Failed to create registration session with Python backend.");
-            }
-          } else {
-            alert("Database Error registering voter.");
-          }
-        }}>Register Details</button>
+        <button style={{...button, width: "80%", marginTop: "10px"}} onClick={handleRegister}>Register Details</button>
       </div>
     </PageWrapper>
   );

@@ -72,17 +72,46 @@ app.post("/get-voter", async (req, res) => {
   res.json(data);
 });
 
+function toRequiredInt(value, fieldName) {
+  if (value === undefined || value === null || value === "") {
+    return { error: `${fieldName} is required` };
+  }
+  const n = Number(value);
+  if (!Number.isInteger(n)) {
+    return { error: `${fieldName} must be a whole number` };
+  }
+  return { value: n };
+}
+
 /* ----- VOTER REGISTER ----- */
 app.post("/register-voter", async (req, res) => {
-  const { voterId, name, age, booth_no } = req.body;
-  if (!voterId || !name) return res.status(400).json({ error: "Missing required fields" });
+  try {
+    const { voterId, name, age, booth_no } = req.body;
+    if (!voterId || !name) return res.status(400).json({ error: "Missing required fields" });
 
-  const { data, error } = await supabase
-    .from("voters")
-    .insert([{ voter_id: voterId, name, age, booth_no, has_voted: false }]);
+    const parsedAge = toRequiredInt(age, "Age");
+    if (parsedAge.error) return res.status(400).json({ error: parsedAge.error });
+    const parsedBooth = toRequiredInt(booth_no, "Booth number");
+    if (parsedBooth.error) return res.status(400).json({ error: parsedBooth.error });
 
-  if (error) return res.status(400).json({ error: error.message });
-  res.json({ success: true });
+    const { error } = await supabase.from("voters").insert([{
+      voter_id: String(voterId).trim(),
+      name: String(name).trim(),
+      age: parsedAge.value,
+      booth_no: parsedBooth.value,
+      has_voted: false
+    }]);
+
+    if (error) {
+      if (error.code === "23505" || /duplicate key/i.test(error.message)) {
+        return res.status(409).json({ error: "This voter ID is already registered." });
+      }
+      return res.status(400).json({ error: error.message });
+    }
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message || "Database Error registering voter." });
+  }
 });
 
 /* ----- GET VOTER ----- */
